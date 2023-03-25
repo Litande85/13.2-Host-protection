@@ -165,6 +165,8 @@ cryptouser@makhota-vm10:~$ ls /home/cryptouser/
 123  1234
 ```
 
+![cryptouser](img/img%202023-03-25%20235009.png)
+
 ---
 
 ### Задание 2
