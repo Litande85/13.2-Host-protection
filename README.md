@@ -131,7 +131,6 @@ user@makhota-vm10:/home/cryptouser$ sudo reboot
 user@makhota-vm10:~$ sudo ls /home/cryptouser/
 Access-Your-Private-Data.desktop  README.txt
 user@makhota-vm10:~$ sudo cat /home/cryptouser/Access-Your-Private-Data.desktop
-sudo: unable to resolve host makhota-vm10: Name or service not known
 [Desktop Entry]
 _Name=Access Your Private Data
 _GenericName=Access Your Private Data
@@ -141,7 +140,6 @@ Type=Application
 Categories=System;Security;
 X-Ubuntu-Gettext-Domain=ecryptfs-utils
 user@makhota-vm10:~$ sudo cat /home/cryptouser/README.txt
-sudo: unable to resolve host makhota-vm10: Name or service not known
 THIS DIRECTORY HAS BEEN UNMOUNTED TO PROTECT YOUR DATA.
 
 From the graphical desktop, click on:
