@@ -21,7 +21,7 @@
 **1. Установка `eCryptfs`**
 
 ```bash
-sudo apt install ecryptfs-utils cryptsetup lsof
+sudo apt install ecryptfs-utils  lsof
 # проверяем включен ли модуль
 sudo modprobe ecryptfs
 ```
@@ -38,7 +38,7 @@ Copying files from `/etc/skel' ...
 New password: 
 Retype new password: 
 passwd: password updated successfully
-# повышаем права
+# добавляем cryptouser в группу sudo
 sudo usermod -aG sudo cryptouser
 ```
 
@@ -179,7 +179,126 @@ cryptouser@makhota-vm10:~$ ls /home/cryptouser/
 
 ### *<a name = "2"> Ответ к Заданию 2</a>*
 
+**1. Установка `LUKS`**
 
+```bash
+sudo apt install cryptsetup 
+# Проверка установки:
+cryptsetup --version
+```
+
+![install](img/img%202023-03-26%20173735.png)
+
+**2. Создание раздела 100 Мб**
+
+```bash
+┌──(kali㉿makhota-kali)-[~]
+└─$ lsblk 
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0 80.1G  0 disk 
+└─sda1   8:1    0 80.1G  0 part /
+sdb      8:16   0    1G  0 disk 
+sr0     11:0    1 1024M  0 rom  
+                                                          
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo fdisk /dev/sdb
+
+Welcome to fdisk (util-linux 2.38.1).
+Changes will remain in memory only, until you decide to write them.
+Be careful before using the write command.
+
+Device does not contain a recognized partition table.
+Created a new DOS (MBR) disklabel with disk identifier 0x9b7262a7.
+
+Command (m for help): n
+Partition type
+   p   primary (0 primary, 0 extended, 4 free)
+   e   extended (container for logical partitions)
+Select (default p): 
+
+Using default response p.
+Partition number (1-4, default 1): 
+First sector (2048-2097151, default 2048): 
+Last sector, +/-sectors or +/-size{K,M,G,T,P} (2048-2097151, default 2097151): +100M
+
+Created a new partition 1 of type 'Linux' and of size 100 MiB.
+
+Command (m for help): i
+Selected partition 1
+         Device: /dev/sdb1
+          Start: 2048
+            End: 206847
+        Sectors: 204800
+      Cylinders: 13
+           Size: 100M
+             Id: 83
+           Type: Linux
+    Start-C/H/S: 0/32/33
+      End-C/H/S: 12/223/19
+
+Command (m for help): w
+The partition table has been altered.
+Calling ioctl() to re-read partition table.
+Syncing disks.
+
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0 80.1G  0 disk 
+└─sda1   8:1    0 80.1G  0 part /
+sdb      8:16   0    1G  0 disk 
+└─sdb1   8:17   0  100M  0 part 
+sr0     11:0    1 1024M  0 rom  
+
+```
+
+**3. Шифрование созданного раздела с помощью LUKS**
+
+Подготовка раздела (luksFormat):
+```bash
+sudo cryptsetup -y -v --type luks2 luksFormat /dev/sdb1
+# YES пишем капсом!
+```
+
+![luksFormat](img/img%202023-03-26%20182536.png)
+
+Монтирование раздела:
+
+```bash
+sudo cryptsetup luksOpen /dev/sdb1 disk
+ls /dev/mapper/disk
+```
+
+![luksOpen](img/img%202023-03-26%20182908.png)
+
+Форматирование раздела:
+
+```bash
+sudo dd if=/dev/zero of=/dev/mapper/disk
+sudo mkfs.ext4 /dev/mapper/disk 
+```
+
+![dd](img/img%202023-03-26%20183726.png)
+
+![mkfs](img/img%202023-03-26%20183756.png)
+
+Монтирование «открытого» раздела:
+```bash
+mkdir .secret
+sudo mount /dev/mapper/disk .secret/
+```
+![mount](img/img%202023-03-26%20184428.png)
+
+Завершение работы:
+```bash
+sudo umount .secret
+sudo cryptsetup luksClose disk
+```
+
+![luksClose](img/img%202023-03-26%20185604.png)
+
+![status](img/img%202023-03-26%20190203.png)
 
 ---
 ## Дополнительные задания (со звёздочкой*)
