@@ -314,8 +314,160 @@ sudo cryptsetup luksClose disk
 
 *В качестве ответа пришлите снимки экрана с поэтапным выполнением задания.*
 
-### *<a name = "3"> Ответ к Заданию 3</a>*
+### *<a name = "3"> Ответ к Заданию 3 </a>*
 
+```bash
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo apt install apparmor-profiles apparmor-utils apparmor-profiles-extra
+...
 
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo apparmor_status
+apparmor module is loaded.
+29 profiles are loaded.
+7 profiles are in enforce mode.
+   /usr/bin/pidgin
+   /usr/bin/pidgin//sanitized_helper
+   /usr/bin/totem
+   /usr/bin/totem-audio-preview
+   /usr/bin/totem-video-thumbnailer
+   /usr/bin/totem//sanitized_helper
+   apt-cacher-ng
+22 profiles are in complain mode.
+   /usr/bin/irssi
+   avahi-daemon
+   dnsmasq
+   dnsmasq//libvirt_leaseshelper
+   identd
+   klogd
+   mdnsd
+   nmbd
+   nscd
+   php-fpm
+   ping
+   samba-bgqd
+   samba-dcerpcd
+   samba-rpcd
+   samba-rpcd-classic
+   samba-rpcd-spoolss
+   smbd
+   smbldap-useradd
+   smbldap-useradd///etc/init.d/nscd
+   syslog-ng
+   syslogd
+   traceroute
+0 profiles are in kill mode.
+0 profiles are in unconfined mode.
+0 processes have profiles defined.
+0 processes are in enforce mode.
+0 processes are in complain mode.
+0 processes are unconfined but have a profile defined.
+0 processes are in mixed mode.
+0 processes are in kill mode.
+
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$  ls /etc/apparmor.d/
+
+abi                    local            samba-rpcd          tunables                  usr.lib.ipsec.charon    usr.sbin.mariadbd         usr.sbin.traceroute
+abstractions           lsb_release      samba-rpcd-classic  usr.bin.irssi             usr.lib.ipsec.stroke    usr.sbin.mdnsd
+apache2.d              nvidia_modprobe  samba-rpcd-spoolss  usr.bin.man               usr.sbin.apt-cacher-ng  usr.sbin.nmbd
+bin.ping               php-fpm          sbin.dhclient       usr.bin.pidgin            usr.sbin.avahi-daemon   usr.sbin.nscd
+disable                samba            sbin.klogd          usr.bin.tcpdump           usr.sbin.dnsmasq        usr.sbin.ntpd
+force-complain         samba-bgqd       sbin.syslogd        usr.bin.totem             usr.sbin.haveged        usr.sbin.smbd
+lightdm-guest-session  samba-dcerpcd    sbin.syslog-ng      usr.bin.totem-previewers  usr.sbin.identd         usr.sbin.smbldap-useradd
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo cp /usr/bin/man /usr/bin/man1
+
+┌──(kali㉿makhota-kali)-[~]
+└─$ ls /usr/bin | grep '^man' 
+man
+man1
+mandb
+manpath
+man-recode
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo cp /bin/ping /usr/bin/man
+
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo man 127.0.0.1
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.033 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.059 ms
+64 bytes from 127.0.0.1: icmp_seq=3 ttl=64 time=0.044 ms
+^C
+--- 127.0.0.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2047ms
+rtt min/avg/max/mdev = 0.033/0.045/0.059/0.010 ms
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo aa-enforce man
+Setting /usr/bin/man to enforce mode.
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo man 127.0.0.1
+man: socktype: SOCK_RAW
+man: socket: Permission denied
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ cat /etc/apparmor.d/bin.ping
+
+# ------------------------------------------------------------------
+#
+#    Copyright (C) 2002-2009 Novell/SUSE
+#    Copyright (C) 2010 Canonical Ltd.
+#
+#    This program is free software; you can redistribute it and/or
+#    modify it under the terms of version 2 of the GNU General Public
+#    License published by the Free Software Foundation.
+#
+# ------------------------------------------------------------------
+
+abi <abi/3.0>,
+
+include <tunables/global>
+profile ping /{usr/,}bin/{,iputils-}ping flags=(complain) {
+  include <abstractions/base>
+  include <abstractions/consoles>
+  include <abstractions/nameservice>
+
+  capability net_raw,
+  capability setuid,
+  network inet raw,
+  network inet6 raw,
+
+  /{,usr/}bin/{,iputils-}ping mixr,
+  /etc/modules.conf r,
+
+  # Site-specific additions and overrides. See local/README for details.
+  include if exists <local/bin.ping>
+}
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo service apparmor stop
+
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo man 127.0.0.1          
+man: socktype: SOCK_RAW
+man: socket: Permission denied
+                                                                                                                                                                      
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo service apparmor teardown
+Usage: /etc/init.d/apparmor {start|stop|restart|reload|force-reload|status}
+                                                                                                                                                                    
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo cp /usr/bin/man1 /usr/bin/man
+
+┌──(kali㉿makhota-kali)-[~]
+└─$ sudo service apparmor status
+○ apparmor.service - Load AppArmor profiles
+     Loaded: loaded (/lib/systemd/system/apparmor.service; disabled; preset: disabled)
+     Active: inactive (dead)
+       Docs: man:apparmor(7)
+             https://gitlab.com/apparmor/apparmor/wikis/home/
+```
 
 
